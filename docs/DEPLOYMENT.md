@@ -100,7 +100,7 @@ Rotate this key if it is ever exposed. Restrict who can access the Vercel projec
 3. On a secured workstation with Admin env vars loaded:
 
 ```text
-npm run admin:set -- FIREBASE_UID --confirm
+npm run admin:set -- FIREBASE_UID confirm
 ```
 
 4. Sign out and sign in again so the admin claim is present.

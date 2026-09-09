@@ -71,7 +71,7 @@ The service-account private key is the main free-plan operational risk. Restrict
 There is no public admin registration. Create and verify the intended administrator account normally, copy its Firebase UID, then run from a secured administrator workstation:
 
 ```text
-npm run admin:set -- FIREBASE_UID --confirm
+npm run admin:set -- FIREBASE_UID confirm
 ```
 
 The command uses the Admin environment variables or Application Default Credentials. The user must sign out and in again to receive the claim. Confirm the UID carefully; every admin assignment is security-sensitive.
