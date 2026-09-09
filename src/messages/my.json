@@ -67,7 +67,13 @@
     "resetSent": "ဤအကောင့်ရှိပါက စကားဝှက်ပြန်သတ်မှတ်ရန် အီးမေးလ်ကို စစ်ဆေးပါ။",
     "verifyEmail": "ကာကွယ်ထားသော လုပ်ဆောင်ချက်များ မသုံးမီ အီးမေးလ်ကို အတည်ပြုပါ။",
     "configMissing": "Firebase မသတ်မှတ်ရသေးပါ။ အကောင့်ဝင်ခြင်း မစမ်းမီ docs/MANUAL_SETUP.md ကို လိုက်နာပါ။",
-    "genericError": "အကောင့်ဝင်၍ မရပါ။ အချက်အလက်များကို စစ်ပြီး ပြန်ကြိုးစားပါ။"
+    "genericError": "အကောင့်ဝင်၍ မရပါ။ အချက်အလက်များကို စစ်ပြီး ပြန်ကြိုးစားပါ။",
+    "unauthorizedDomain": "ဤ site domain ကို Firebase Authentication တွင် ခွင့်မပြုရသေးပါ။ Authentication → Settings → Authorized domains တွင် b-plus-olive.vercel.app ကို ထည့်ပါ။",
+    "popupBlocked": "Google အကောင့်ဝင် popup ကို ပိတ်ထားသည်။ ဤ site အတွက် popup ခွင့်ပြုပြီး ပြန်ကြိုးစားပါ။",
+    "popupClosed": "Google အကောင့်ဝင်ခြင်း မပြီးမီ ပိတ်လိုက်သည်။",
+    "invalidCredential": "အီးမေးလ် သို့မဟုတ် စကားဝှက် မမှန်ပါ။",
+    "tooManyRequests": "ကြိုးစားမှု များနေသည်။ ခဏစောင့်ပြီး ပြန်ကြိုးစားပါ။",
+    "emailInUse": "ဤအီးမေးလ်ဖြင့် အကောင့်ရှိပြီးသား။ အကောင့်ဝင်မည်ကို သုံးပါ။"
   },
   "dashboard": {
     "title": "ပင်မလုပ်ငန်းခွင်",

@@ -67,7 +67,13 @@
     "resetSent": "If this account exists, check its inbox for reset instructions.",
     "verifyEmail": "Check your email and verify your address before using protected features.",
     "configMissing": "Firebase is not configured. Follow docs/MANUAL_SETUP.md before testing sign-in.",
-    "genericError": "We could not complete sign-in. Check your details and try again."
+    "genericError": "We could not complete sign-in. Check your details and try again.",
+    "unauthorizedDomain": "This site domain is not authorized in Firebase Authentication. Add b-plus-olive.vercel.app under Authentication → Settings → Authorized domains.",
+    "popupBlocked": "The Google sign-in popup was blocked. Allow popups for this site and try again.",
+    "popupClosed": "Google sign-in was closed before it finished.",
+    "invalidCredential": "Email or password is incorrect.",
+    "tooManyRequests": "Too many attempts. Wait a moment and try again.",
+    "emailInUse": "An account with this email already exists. Sign in instead."
   },
   "dashboard": {
     "title": "Dashboard",

@@ -38,7 +38,7 @@ npm run test:e2e
 3. Stay on Spark. Do not enable Phone Auth or deploy Functions.
 4. Register a Web app and copy the public config values.
 5. Authentication → enable **Email/Password** and **Google**.
-6. Authentication → Authorized domains: add `localhost`, your Vercel domains, and any custom domain.
+6. Authentication → Authorized domains: add `localhost`, `b-plus-olive.vercel.app`, and any custom domain.
 7. (Optional push) Cloud Messaging → Web Push certificates → copy the VAPID key.
 8. From a trusted machine, with Firebase CLI logged in:
 

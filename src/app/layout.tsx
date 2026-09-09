@@ -1,10 +1,17 @@
 import type { Metadata, Viewport } from "next";
+import { Plus_Jakarta_Sans } from "next/font/google";
 import "@/app/globals.css";
 import { BottomNav } from "@/components/bottom-nav";
 import { AppProviders } from "@/components/providers/app-providers";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { SkipLink } from "@/components/skip-link";
+
+const sans = Plus_Jakarta_Sans({
+  subsets: ["latin"],
+  display: "swap",
+  variable: "--font-sans",
+});
 
 export const metadata: Metadata = {
   title: {
@@ -20,8 +27,11 @@ export const viewport: Viewport = {
 
 function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="my" suppressHydrationWarning>
-      <body className="min-h-screen bg-cream font-sans text-ink antialiased">
+    <html lang="my" className={sans.variable} suppressHydrationWarning>
+      <body
+        className={`${sans.className} min-h-screen bg-cream font-sans text-ink antialiased`}
+        suppressHydrationWarning
+      >
         <AppProviders>
           <SkipLink />
           <SiteHeader />

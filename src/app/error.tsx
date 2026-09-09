@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect } from "react";
-import { useLocale } from "@/components/providers/locale-provider";
 
 export default function ErrorPage({
   error,
@@ -10,16 +9,19 @@ export default function ErrorPage({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
-  const { t } = useLocale();
-
   useEffect(() => {
     console.error("Page error", { name: error.name, digest: error.digest });
   }, [error]);
 
   return (
     <section className="page-shell text-center">
-      <h1 className="text-3xl font-black">{t("errors.title")}</h1>
-      <button className="button button-primary mt-6" onClick={reset}>{t("common.retry")}</button>
+      <h1 className="text-3xl font-black">Something went wrong</h1>
+      <p className="mx-auto mt-3 max-w-md text-sm text-stone-500">
+        If this keeps happening, try a private/incognito window (browser extensions can break the page).
+      </p>
+      <button className="button button-primary mt-6" onClick={reset} type="button">
+        Retry
+      </button>
     </section>
   );
 }

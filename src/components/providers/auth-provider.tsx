@@ -20,6 +20,7 @@ import {
   updateProfile,
   type User,
 } from "firebase/auth";
+import { FirebaseError } from "firebase/app";
 import { apiRequest } from "@/lib/api";
 import { getFirebaseServices, isFirebaseConfigured } from "@/lib/firebase/client";
 import type { Locale } from "@/lib/i18n";
@@ -28,7 +29,7 @@ type AuthContextValue = {
   user: User | null;
   loading: boolean;
   configured: boolean;
-  signIn: (email: string, password: string) => Promise<void>;
+  signIn: (email: string, password: string, locale: Locale) => Promise<void>;
   register: (name: string, email: string, password: string, locale: Locale) => Promise<void>;
   signInWithGoogle: (locale: Locale) => Promise<void>;
   resendVerification: () => Promise<void>;
@@ -37,6 +38,30 @@ type AuthContextValue = {
 };
 
 const AuthContext = createContext<AuthContextValue | null>(null);
+
+export function describeAuthError(error: unknown): string {
+  if (error instanceof FirebaseError) {
+    switch (error.code) {
+      case "auth/unauthorized-domain":
+        return "auth.unauthorizedDomain";
+      case "auth/popup-blocked":
+        return "auth.popupBlocked";
+      case "auth/popup-closed-by-user":
+        return "auth.popupClosed";
+      case "auth/invalid-credential":
+      case "auth/wrong-password":
+      case "auth/user-not-found":
+        return "auth.invalidCredential";
+      case "auth/too-many-requests":
+        return "auth.tooManyRequests";
+      case "auth/email-already-in-use":
+        return "auth.emailInUse";
+      default:
+        return "auth.genericError";
+    }
+  }
+  return "auth.genericError";
+}
 
 async function bootstrap(displayName: string, locale: Locale) {
   await apiRequest("/account/bootstrap", {
@@ -50,7 +75,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(isFirebaseConfigured);
 
   useEffect(() => {
-    if (!isFirebaseConfigured) return;
+    if (!isFirebaseConfigured) {
+      setLoading(false);
+      return;
+    }
     const { auth } = getFirebaseServices();
     return onAuthStateChanged(auth, (nextUser) => {
       setUser(nextUser);
@@ -58,9 +86,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     });
   }, []);
 
-  const signIn = useCallback(async (email: string, password: string) => {
+  const signIn = useCallback(async (email: string, password: string, locale: Locale) => {
     const { auth } = getFirebaseServices();
-    await signInWithEmailAndPassword(auth, email, password);
+    const credential = await signInWithEmailAndPassword(auth, email, password);
+    await bootstrap(
+      credential.user.displayName ?? email.split("@")[0] ?? "B+ user",
+      locale,
+    );
   }, []);
 
   const register = useCallback(async (

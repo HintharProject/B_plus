@@ -3,7 +3,7 @@
 import { FormEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowRight, LoaderCircle, Mail, Lock, User, Chrome } from "lucide-react";
-import { useAuth } from "@/components/providers/auth-provider";
+import { describeAuthError, useAuth } from "@/components/providers/auth-provider";
 import { useLocale } from "@/components/providers/locale-provider";
 import { Brand } from "@/components/brand";
 
@@ -34,11 +34,11 @@ function LoginPage() {
           locale,
         );
       } else {
-        await signIn(String(data.get("email")), String(data.get("password")));
+        await signIn(String(data.get("email")), String(data.get("password")), locale);
       }
       router.push(mode === "register" ? "/verify-email" : "/dashboard");
-    } catch {
-      setError(t("auth.genericError"));
+    } catch (err) {
+      setError(t(describeAuthError(err)));
     } finally {
       setLoading(false);
     }
@@ -50,8 +50,8 @@ function LoginPage() {
     try {
       await signInWithGoogle(locale);
       router.push("/dashboard");
-    } catch {
-      setError(t("auth.genericError"));
+    } catch (err) {
+      setError(t(describeAuthError(err)));
     } finally {
       setLoading(false);
     }

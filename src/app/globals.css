@@ -11,7 +11,6 @@
 
   body {
     @apply bg-cream text-ink;
-    font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
   }
 
   :focus-visible {
