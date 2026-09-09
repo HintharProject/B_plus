@@ -3,7 +3,17 @@ node_modules
 out
 *.log
 .env
+.env.*
+!.env.example
 .env.local
 .env.*.local
 .vercel
 *.tsbuildinfo
+coverage
+playwright-report
+test-results
+.firebase
+firebase-debug.log
+.DS_Store
+Thumbs.db
+functions/lib

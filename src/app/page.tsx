@@ -1,76 +1,335 @@
+"use client";
+
 import Link from "next/link";
-import { ArrowRight, Building2, CheckCircle2, HeartHandshake, Hospital, LockKeyhole, Radio, ShieldCheck, UserRoundCheck } from "lucide-react";
+import {
+  ArrowRight,
+  HeartHandshake,
+  LockKeyhole,
+  MessageCircle,
+  ShieldCheck,
+  Droplets,
+  Users,
+  MapPin,
+  Clock,
+} from "lucide-react";
+import { useLocale } from "@/components/providers/locale-provider";
 
-const steps = [
-  { icon: Building2, title: "A coordinator verifies the need", text: "A trusted local group records the hospital, requested type, units and timing." },
-  { icon: Radio, title: "Opted-in donors are notified", text: "B+ helps the group reach available donors without exposing names or phone numbers." },
-  { icon: UserRoundCheck, title: "Contact follows consent", text: "Only after a donor accepts can the coordinator share the demo contact details." },
-  { icon: Hospital, title: "The hospital takes over", text: "Hospital staff type, screen, approve and collect every donation." },
-];
+/* ─── Floating mock "request card" shown in hero ─────────────────── */
+function MockRequestCard({
+  blood,
+  hospital,
+  location,
+  urgency,
+  time,
+  accepted,
+}: {
+  blood: string;
+  hospital: string;
+  location: string;
+  urgency: "CRITICAL" | "URGENT" | "STANDARD";
+  time: string;
+  accepted?: boolean;
+}) {
+  const urgencyStyle = {
+    CRITICAL: "border-red-200 bg-red-50 text-red-700",
+    URGENT: "border-amber-200 bg-amber-50 text-amber-800",
+    STANDARD: "border-sky-200 bg-sky-50 text-sky-700",
+  }[urgency];
+  const urgencyDot = {
+    CRITICAL: "bg-red-500 animate-pulse",
+    URGENT: "bg-amber-500",
+    STANDARD: "bg-sky-500",
+  }[urgency];
 
+  return (
+    <div
+      className={`relative flex items-start gap-3 rounded-2xl border bg-white p-4 shadow-[0_4px_24px_rgba(37,28,29,0.08)] transition-all ${
+        accepted ? "border-emerald-200 ring-1 ring-emerald-200" : "border-stone-100"
+      }`}
+    >
+      {/* Blood type */}
+      <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-brand-600 text-sm font-black text-white shadow-sm">
+        {blood}
+      </div>
+      <div className="flex-1 min-w-0">
+        <div className="flex items-start justify-between gap-2">
+          <p className="text-sm font-black leading-tight text-stone-800">{hospital}</p>
+          <span className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-bold ${urgencyStyle}`}>
+            <span className={`h-1.5 w-1.5 rounded-full ${urgencyDot}`} />
+            {urgency === "CRITICAL" ? "Critical" : urgency === "URGENT" ? "Urgent" : "Standard"}
+          </span>
+        </div>
+        <div className="mt-1.5 flex items-center gap-3 text-xs text-stone-400">
+          <span className="flex items-center gap-1">
+            <MapPin className="h-3 w-3" aria-hidden />
+            {location}
+          </span>
+          <span className="flex items-center gap-1">
+            <Clock className="h-3 w-3" aria-hidden />
+            {time}
+          </span>
+        </div>
+        {accepted && (
+          <p className="mt-2 text-xs font-bold text-emerald-600">✓ Match accepted — coordination started</p>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/* ─── Privacy shield visual ──────────────────────────────────────── */
+function PrivacyShield() {
+  return (
+    <div className="relative flex flex-col items-center justify-center rounded-2xl border border-brand-100 bg-gradient-to-b from-brand-50 to-white p-5 shadow-sm">
+      <div className="grid h-12 w-12 place-items-center rounded-2xl bg-brand-600 shadow-glow-sm">
+        <ShieldCheck className="h-6 w-6 text-white" aria-hidden />
+      </div>
+      <p className="mt-3 text-center text-xs font-bold text-brand-900">Privacy protected</p>
+      <div className="mt-3 flex flex-col gap-1.5 w-full">
+        {["Contact details", "Precise location", "Patient identity"].map((item) => (
+          <div key={item} className="flex items-center gap-2 rounded-lg bg-white/80 px-3 py-1.5 text-xs text-stone-500 border border-stone-100">
+            <span className="h-1.5 w-1.5 rounded-full bg-brand-400 shrink-0" aria-hidden />
+            {item} hidden until accepted
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* ─── Main landing page ──────────────────────────────────────────── */
 function LandingPage() {
+  const { t } = useLocale();
+
+  const steps = [
+    {
+      icon: LockKeyhole,
+      number: "01",
+      title: t("home.limited"),
+      text: t("home.limitedText"),
+      color: "from-brand-500 to-brand-700",
+    },
+    {
+      icon: HeartHandshake,
+      number: "02",
+      title: t("home.consent"),
+      text: t("home.consentText"),
+      color: "from-rose-400 to-brand-600",
+    },
+    {
+      icon: MessageCircle,
+      number: "03",
+      title: t("home.connect"),
+      text: t("home.connectText"),
+      color: "from-pink-400 to-rose-600",
+    },
+  ];
+
+  const stats = [
+    { icon: ShieldCheck, label: "Privacy-first" },
+    { icon: Users, label: "Verified orgs" },
+    { icon: Droplets, label: "Anonymous matching" },
+  ];
+
   return (
     <>
-      <section className="overflow-hidden border-b border-red-100 bg-[radial-gradient(circle_at_85%_20%,#ffe0e0_0,transparent_35%)]">
-        <div className="mx-auto grid max-w-7xl gap-12 px-4 py-14 sm:px-6 sm:py-20 lg:grid-cols-[1.05fr_.95fr] lg:items-center lg:py-28">
+      {/* ── Hero ─────────────────────────────────────────────── */}
+      <section className="relative overflow-hidden bg-cream">
+        {/* Layered radial gradients */}
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_70%_70%_at_50%_-20%,#ffd6d8_0%,transparent_65%)]" aria-hidden />
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_40%_50%_at_100%_60%,#ffe4e6_0%,transparent_60%)]" aria-hidden />
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_35%_40%_at_0%_80%,#fff0f0_0%,transparent_55%)]" aria-hidden />
+
+        {/* Decorative large ring */}
+        <div
+          className="pointer-events-none absolute -right-32 -top-32 h-[600px] w-[600px] rounded-full border border-brand-100/50"
+          aria-hidden
+        />
+        <div
+          className="pointer-events-none absolute -right-16 -top-16 h-[400px] w-[400px] rounded-full border border-brand-200/40"
+          aria-hidden
+        />
+
+        <div className="mx-auto grid max-w-7xl grid-cols-1 items-center gap-10 px-4 pb-14 pt-12 sm:px-6 lg:grid-cols-2 lg:gap-16 lg:pb-24 lg:pt-20">
+          {/* ── Left: Copy ── */}
           <div>
-            <p className="mb-5 font-extrabold text-brand-700">B+ is for every blood type.</p>
-            <h1 className="max-w-3xl text-4xl font-black leading-[1.05] tracking-[-0.045em] text-ink sm:text-6xl">
-              Faster donor outreach, coordinated by people you trust.
+            {/* Eyebrow */}
+            <div className="animate-fade-up">
+              <span className="eyebrow-badge">
+                <span className="relative flex h-2 w-2">
+                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-brand-500 opacity-75" />
+                  <span className="relative inline-flex h-2 w-2 rounded-full bg-brand-600" />
+                </span>
+                {t("home.eyebrow")}
+              </span>
+            </div>
+
+            {/* Headline */}
+            <h1 className="animate-fade-up-delay mt-6 text-[2.1rem] font-black leading-[1.08] tracking-tight sm:text-5xl lg:text-[3.2rem]">
+              Find willing donors.
+              <br />
+              <span className="gradient-text">Protect privacy.</span>
             </h1>
-            <p className="mt-6 max-w-2xl text-base leading-7 text-stone-600 sm:text-lg">
-              B+ helps verified Myanmar charities and community groups notify opted-in donors. It is a coordinator—not a blood bank—and never replaces hospital screening.
+
+            {/* Description */}
+            <p className="animate-fade-up-delay-2 mt-5 max-w-lg text-base leading-8 text-stone-500">
+              {t("home.description")}
             </p>
-            <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-              <Link href="/login" className="inline-flex items-center justify-center gap-2 rounded-2xl bg-brand-600 px-6 py-3.5 text-sm font-bold text-white shadow-lg shadow-red-200 transition hover:bg-brand-700">
-                Enter the demo <ArrowRight className="h-4 w-4" />
+
+            {/* CTAs */}
+            <div className="animate-fade-up-delay-3 mt-8 flex flex-wrap items-center gap-3">
+              <Link
+                href="/login"
+                className="button button-primary px-6 py-3 text-base shadow-glow-sm"
+                id="hero-primary-cta"
+              >
+                {t("home.primaryAction")}
+                <ArrowRight className="h-4 w-4" aria-hidden />
               </Link>
-              <Link href="/map" className="inline-flex items-center justify-center gap-2 rounded-2xl border border-stone-200 bg-white px-6 py-3.5 text-sm font-bold text-ink shadow-sm hover:border-brand-200">
-                See demo needs
-              </Link>
+              <a
+                href="#how-it-works"
+                className="button button-secondary px-6 py-3 text-base"
+                id="hero-secondary-cta"
+              >
+                {t("home.secondaryAction")}
+              </a>
             </div>
-            <div className="mt-7 flex flex-wrap gap-x-5 gap-y-2 text-xs font-semibold text-stone-500">
-              <span className="flex items-center gap-1.5"><CheckCircle2 className="h-4 w-4 text-emerald-600" /> All 8 blood types</span>
-              <span className="flex items-center gap-1.5"><LockKeyhole className="h-4 w-4 text-emerald-600" /> Consent before contact</span>
-              <span className="flex items-center gap-1.5"><ShieldCheck className="h-4 w-4 text-emerald-600" /> Demo data only</span>
+
+            {/* Trust pills */}
+            <div className="animate-fade-up-delay-3 mt-10 flex flex-wrap items-center gap-x-6 gap-y-3 border-t border-stone-100 pt-7">
+              {stats.map((stat, i) => {
+                const Icon = stat.icon;
+                return (
+                  <span key={i} className="stat-pill">
+                    <span className="flex h-6 w-6 items-center justify-center rounded-md bg-brand-50">
+                      <Icon className="h-3 w-3 text-brand-600" aria-hidden />
+                    </span>
+                    {stat.label}
+                  </span>
+                );
+              })}
             </div>
           </div>
-          <div className="relative mx-auto w-full max-w-lg">
-            <div className="absolute -inset-4 rotate-3 rounded-[2rem] bg-brand-100" />
-            <div className="relative rounded-[2rem] border border-white bg-white p-5 shadow-card sm:p-7">
-              <div className="flex items-start justify-between border-b border-stone-100 pb-5">
-                <div><p className="text-xs font-bold uppercase tracking-widest text-brand-600">Demo request</p><h2 className="mt-1 text-xl font-black">Yangon General Hospital</h2></div>
-                <span className="rounded-full bg-red-100 px-3 py-1 text-[10px] font-black text-red-700">CRITICAL</span>
-              </div>
-              <div className="grid grid-cols-3 gap-3 py-6">
-                {[["O+", "TYPE"], ["2", "UNITS"], ["Today", "WHEN"]].map(([value, label]) => (
-                  <div key={label} className="rounded-2xl bg-stone-50 p-4 text-center"><p className="text-2xl font-black">{value}</p><p className="mt-1 text-[9px] font-bold tracking-widest text-stone-400">{label}</p></div>
-                ))}
-              </div>
-              <div className="rounded-2xl bg-emerald-50 p-4 text-sm leading-6 text-emerald-900">
-                <strong>1 donor accepted.</strong> Contact is now visible to the coordinator for this demo.
-              </div>
-              <p className="mt-5 text-xs leading-5 text-stone-500">Hospital staff confirm donor eligibility and blood compatibility. B+ does not make clinical decisions.</p>
+
+          {/* ── Right: Visual panel ── */}
+          <div className="animate-fade-up-delay-2 hidden lg:flex lg:flex-col lg:gap-4">
+            {/* Mock active requests */}
+            <div className="flex flex-col gap-3">
+              <MockRequestCard
+                blood="O+"
+                hospital="Yangon General Hospital"
+                location="Pabedan, Yangon"
+                urgency="CRITICAL"
+                time="Needed in 2 hrs"
+              />
+              <MockRequestCard
+                blood="AB−"
+                hospital="Mandalay Children's Hospital"
+                location="Chan Mya Tharsi, Mandalay"
+                urgency="URGENT"
+                time="Needed by 6 PM"
+                accepted
+              />
+              <MockRequestCard
+                blood="B+"
+                hospital="North Okkalapa Hospital"
+                location="North Okkalapa, Yangon"
+                urgency="STANDARD"
+                time="Needed tomorrow"
+              />
             </div>
+
+            {/* Privacy shield */}
+            <PrivacyShield />
+          </div>
+        </div>
+
+        {/* Bottom fade */}
+        <div className="pointer-events-none absolute bottom-0 left-0 right-0 h-20 bg-gradient-to-t from-cream to-transparent" aria-hidden />
+      </section>
+
+      {/* ── How It Works ─────────────────────────────────────── */}
+      <section id="how-it-works" className="relative bg-cream">
+        {/* Subtle top separator */}
+        <div className="mx-auto max-w-7xl px-4 sm:px-6">
+          <div className="h-px bg-gradient-to-r from-transparent via-stone-200 to-transparent" />
+        </div>
+
+        <div className="page-shell py-20 sm:py-28">
+          <div className="mb-14 text-center">
+            <p className="text-xs font-bold uppercase tracking-widest text-brand-600">
+              {t("home.secondaryAction")}
+            </p>
+            <h2 className="mt-3 text-3xl font-black tracking-tight sm:text-4xl">
+              Simple, safe, and transparent
+            </h2>
+            <p className="mx-auto mt-4 max-w-xl text-stone-500">
+              Coordination happens in three clear steps — no personal data leaves your control until you choose.
+            </p>
+          </div>
+
+          <div className="relative grid gap-6 md:grid-cols-3">
+            {/* Connecting dashes — desktop */}
+            <div
+              className="pointer-events-none absolute left-[calc(33.33%+1.5rem)] right-[calc(33.33%+1.5rem)] top-[3.5rem] hidden h-px border-t-2 border-dashed border-brand-200 md:block"
+              aria-hidden
+            />
+
+            {steps.map((step) => {
+              const Icon = step.icon;
+              return (
+                <article key={step.number} className="step-card group">
+                  <span className="absolute right-5 top-4 select-none font-black text-7xl leading-none text-stone-50">
+                    {step.number}
+                  </span>
+                  <span
+                    className={`relative z-10 grid h-12 w-12 place-items-center rounded-2xl bg-gradient-to-br ${step.color} shadow-sm`}
+                  >
+                    <Icon className="h-5 w-5 text-white" aria-hidden />
+                  </span>
+                  <h3 className="relative z-10 mt-5 text-lg font-black">{step.title}</h3>
+                  <p className="relative z-10 mt-2 text-sm leading-7 text-stone-500">
+                    {step.text}
+                  </p>
+                </article>
+              );
+            })}
           </div>
         </div>
       </section>
 
-      <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 sm:py-24">
-        <p className="text-sm font-black uppercase tracking-[0.2em] text-brand-600">How it works</p>
-        <h2 className="mt-3 max-w-xl text-3xl font-black tracking-tight sm:text-4xl">Community coordination, with clear boundaries.</h2>
-        <div className="mt-10 grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          {steps.map((step, index) => {
-            const Icon = step.icon;
-            return <article key={step.title} className="rounded-3xl border border-stone-200 bg-white p-6 shadow-sm"><div className="flex items-center justify-between"><span className="grid h-11 w-11 place-items-center rounded-2xl bg-brand-50 text-brand-600"><Icon className="h-5 w-5" /></span><span className="text-xs font-black text-stone-300">0{index + 1}</span></div><h3 className="mt-5 font-black">{step.title}</h3><p className="mt-2 text-sm leading-6 text-stone-500">{step.text}</p></article>;
-          })}
-        </div>
-      </section>
+      {/* ── Trust / Boundary ─────────────────────────────────── */}
+      <section className="relative overflow-hidden bg-gradient-to-br from-[#1a0608] via-brand-900 to-[#2a0c10]">
+        <div className="dot-grid absolute inset-0" aria-hidden />
+        <div
+          className="pointer-events-none absolute -right-24 -top-24 h-96 w-96 animate-spin-slow rounded-full border border-white/5"
+          aria-hidden
+        />
+        <div
+          className="pointer-events-none absolute -bottom-16 -left-16 h-64 w-64 animate-spin-slow rounded-full border border-white/5"
+          style={{ animationDirection: "reverse", animationDelay: "3s" }}
+          aria-hidden
+        />
 
-      <section className="bg-ink text-white">
-        <div className="mx-auto grid max-w-7xl gap-10 px-4 py-16 sm:px-6 lg:grid-cols-2 lg:py-20">
-          <div><HeartHandshake className="h-10 w-10 text-brand-100" /><h2 className="mt-5 text-3xl font-black">Built for local partners first.</h2><p className="mt-4 max-w-lg leading-7 text-stone-300">The fictional Yangon Community Blood Network uses B+ to manage its opted-in roster and coordinate with hospitals. Individual requests stay pending until a coordinator verifies them.</p></div>
-          <div className="rounded-3xl border border-white/10 bg-white/5 p-6"><LockKeyhole className="h-7 w-7 text-brand-100" /><h3 className="mt-4 text-xl font-black">Privacy by default</h3><p className="mt-3 leading-7 text-stone-300">Radar cards show only blood type, broad township area and distance band. No exact GPS, patient full names, donor names or phone numbers appear before acceptance.</p></div>
+        <div className="page-shell relative z-10 py-20 sm:py-28">
+          <div className="max-w-3xl">
+            <span className="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-white/10 ring-1 ring-white/20 backdrop-blur-sm">
+              <HeartHandshake className="h-7 w-7 text-brand-200" aria-hidden />
+            </span>
+            <h2 className="mt-7 text-3xl font-black text-white sm:text-4xl">
+              {t("home.boundaryTitle")}
+            </h2>
+            <p className="mt-5 text-lg leading-8 text-stone-300">
+              {t("home.boundaryText")}
+            </p>
+            <div className="mt-10 flex flex-wrap items-center gap-4 border-t border-white/10 pt-8 text-sm font-semibold">
+              <Link href="/about" className="text-stone-400 transition hover:text-white">About B+</Link>
+              <span className="text-white/20" aria-hidden>·</span>
+              <Link href="/how-it-works" className="text-stone-400 transition hover:text-white">How it works</Link>
+              <span className="text-white/20" aria-hidden>·</span>
+              <Link href="/safety" className="text-stone-400 transition hover:text-white">Safety &amp; Privacy</Link>
+            </div>
+          </div>
         </div>
       </section>
     </>

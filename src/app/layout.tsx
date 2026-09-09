@@ -1,13 +1,17 @@
 import type { Metadata, Viewport } from "next";
-import "mapbox-gl/dist/mapbox-gl.css";
 import "@/app/globals.css";
 import { BottomNav } from "@/components/bottom-nav";
-import { DemoBanner } from "@/components/demo-banner";
+import { AppProviders } from "@/components/providers/app-providers";
+import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
+import { SkipLink } from "@/components/skip-link";
 
 export const metadata: Metadata = {
-  title: "B+ · Every type counts",
-  description: "A demo coordination tool for community blood donor groups in Myanmar.",
+  title: {
+    default: "B+ · သွေးအမျိုးအစားတိုင်း အရေးပါသည်",
+    template: "%s · B+",
+  },
+  description: "A privacy-first blood donation coordination platform for Myanmar.",
 };
 
 export const viewport: Viewport = {
@@ -16,12 +20,15 @@ export const viewport: Viewport = {
 
 function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en">
+    <html lang="my" suppressHydrationWarning>
       <body className="min-h-screen bg-cream font-sans text-ink antialiased">
-        <DemoBanner />
-        <SiteHeader />
-        <main className="pb-20 md:pb-0">{children}</main>
-        <BottomNav />
+        <AppProviders>
+          <SkipLink />
+          <SiteHeader />
+          <main id="main-content" className="pb-28 md:pb-0">{children}</main>
+          <SiteFooter />
+          <BottomNav />
+        </AppProviders>
       </body>
     </html>
   );

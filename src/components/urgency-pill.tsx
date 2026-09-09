@@ -1,15 +1,35 @@
-import type { Urgency } from "@/data/demo";
+import type { Urgency } from "@/lib/domain";
 
-const styles: Record<Urgency, string> = {
-  CRITICAL: "bg-red-100 text-red-700 ring-red-200",
-  URGENT: "bg-amber-100 text-amber-800 ring-amber-200",
-  STANDARD: "bg-sky-100 text-sky-700 ring-sky-200",
+const config: Record<Urgency, { pill: string; dot: string; label: string }> = {
+  CRITICAL: {
+    pill: "border-red-200 bg-red-50 text-red-700",
+    dot: "bg-red-500",
+    label: "Critical",
+  },
+  URGENT: {
+    pill: "border-amber-200 bg-amber-50 text-amber-800",
+    dot: "bg-amber-500",
+    label: "Urgent",
+  },
+  STANDARD: {
+    pill: "border-sky-200 bg-sky-50 text-sky-700",
+    dot: "bg-sky-500",
+    label: "Standard",
+  },
 };
 
 export function UrgencyPill({ urgency }: { urgency: Urgency }) {
+  const { pill, dot, label } = config[urgency];
   return (
-    <span className={`inline-flex rounded-full px-2.5 py-1 text-[10px] font-black tracking-wider ring-1 ring-inset ${styles[urgency]}`}>
-      {urgency}
+    <span
+      className={`status-chip ${pill}`}
+      aria-label={`Urgency: ${label}`}
+    >
+      <span
+        className={`h-1.5 w-1.5 rounded-full ${dot} ${urgency === "CRITICAL" ? "animate-pulse" : ""}`}
+        aria-hidden
+      />
+      {label}
     </span>
   );
 }

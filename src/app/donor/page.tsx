@@ -1,61 +1,196 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import Link from "next/link";
-import { Bell, CalendarDays, ChevronRight, CircleHelp, Clock3, Droplets, MapPin, ShieldCheck } from "lucide-react";
-import { donorInvitations } from "@/data/demo";
-import { UrgencyPill } from "@/components/urgency-pill";
+import { FormEvent, useState } from "react";
+import { Check, LoaderCircle, MapPin, Calendar } from "lucide-react";
+import { AuthGuard } from "@/components/auth/auth-guard";
+import { useLocale } from "@/components/providers/locale-provider";
+import { apiRequest } from "@/lib/api";
+import { bloodTypes } from "@/lib/domain";
 
-function DonorPage() {
-  const [available, setAvailable] = useState(true);
+const AVAILABILITY_OPTIONS = [
+  {
+    value: "AVAILABLE_NOW",
+    emoji: "🟢",
+    labelKey: "donor.availableNow" as const,
+    color: "border-emerald-300 bg-emerald-50 text-emerald-800",
+    selected: "ring-2 ring-emerald-400 ring-offset-1 border-emerald-400 bg-emerald-50 text-emerald-800",
+  },
+  {
+    value: "AVAILABLE_TODAY",
+    emoji: "🟡",
+    labelKey: "donor.availableToday" as const,
+    color: "border-amber-200 bg-amber-50 text-amber-800",
+    selected: "ring-2 ring-amber-400 ring-offset-1 border-amber-300 bg-amber-50 text-amber-800",
+  },
+  {
+    value: "PAUSED",
+    emoji: "⏸️",
+    labelKey: "donor.paused" as const,
+    color: "border-stone-200 bg-stone-50 text-stone-600",
+    selected: "ring-2 ring-stone-400 ring-offset-1 border-stone-300 bg-stone-100 text-stone-700",
+  },
+];
 
-  useEffect(() => {
-    const saved = localStorage.getItem("bplus-demo-availability");
-    if (saved !== null) setAvailable(saved === "true");
-  }, []);
+function DonorProfileForm() {
+  const { t } = useLocale();
+  const [status, setStatus] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const [availability, setAvailability] = useState("AVAILABLE_NOW");
+  const [bloodType, setBloodType] = useState("O+");
 
-  function toggleAvailability() {
-    setAvailable((current) => {
-      localStorage.setItem("bplus-demo-availability", String(!current));
-      return !current;
-    });
+  async function submit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setBusy(true);
+    setStatus("");
+    setSaved(false);
+    const data = new FormData(event.currentTarget);
+    try {
+      await apiRequest("/donor-profile", {
+        method: "PUT",
+        body: JSON.stringify({
+          bloodType,
+          availability,
+          lastDonationDate: data.get("lastDonationDate") || null,
+          coarseLocation: {
+            stateRegion: data.get("stateRegion"),
+            township: data.get("township"),
+          },
+        }),
+      });
+      setStatus(t("donor.saved"));
+      setSaved(true);
+    } catch {
+      setStatus(t("errors.offline"));
+    } finally {
+      setBusy(false);
+    }
   }
 
   return (
-    <section className="mx-auto max-w-6xl px-4 py-8 sm:px-6 sm:py-12">
-      <div><p className="text-sm font-bold text-brand-600">Donor dashboard</p><h1 className="mt-1 text-3xl font-black tracking-tight sm:text-4xl">Mingalaba, Ko Min Htet.</h1><p className="mt-2 text-stone-500">O+ · Sanchaung area · fictional profile</p></div>
-
-      <div className="mt-8 grid gap-5 lg:grid-cols-[.75fr_1.25fr]">
-        <div className="space-y-5">
-          <article className={`rounded-3xl p-6 text-white shadow-sm transition ${available ? "bg-emerald-700" : "bg-stone-700"}`}>
-            <div className="flex items-center justify-between"><span className="grid h-11 w-11 place-items-center rounded-2xl bg-white/15"><Bell className="h-5 w-5" /></span><button onClick={toggleAvailability} role="switch" aria-checked={available} className={`relative h-7 w-12 rounded-full transition ${available ? "bg-white" : "bg-stone-500"}`}><span className={`absolute top-1 h-5 w-5 rounded-full transition ${available ? "left-6 bg-emerald-700" : "left-1 bg-white"}`} /></button></div>
-            <h2 className="mt-6 text-2xl font-black">{available ? "Available for invites" : "Invites paused"}</h2>
-            <p className="mt-2 text-sm leading-6 text-white/75">{available ? "Demo coordinators may include your anonymous profile in outreach." : "Your profile will not appear in new demo radar results."}</p>
-            <p className="mt-5 text-xs font-bold text-white/60">Change anytime · saved only in this browser</p>
-          </article>
-          <article className="rounded-3xl border border-stone-200 bg-white p-6 shadow-sm"><div className="flex items-center gap-3"><span className="grid h-10 w-10 place-items-center rounded-xl bg-brand-50 text-brand-700"><Droplets className="h-5 w-5" /></span><div><p className="text-xs text-stone-400">Self-reported last donation</p><p className="font-black">April 18 · demo date</p></div></div><p className="mt-4 text-xs leading-5 text-stone-500">This is not an eligibility check. Confirm with hospital staff before donating.</p></article>
+    <div className="page-shell">
+      <div className="page-header">
+        <div>
+          <h1 className="section-heading">{t("donor.title")}</h1>
+          <p className="section-sub">Manage your blood donation availability</p>
         </div>
+      </div>
 
-        <div className="overflow-hidden rounded-3xl border border-stone-200 bg-white shadow-sm">
-          <div className="border-b border-stone-100 p-5 sm:p-6"><h2 className="text-lg font-black">Your invitations</h2><p className="mt-1 text-xs text-stone-500">Respond privately before contact is shared</p></div>
-          <div className="divide-y divide-stone-100">
-            {donorInvitations.map((invite) => (
-              <article key={invite.id} className="p-5 sm:p-6">
-                <div className="flex items-start justify-between gap-3"><div className="flex gap-3"><span className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-brand-50 text-lg font-black text-brand-700">{invite.bloodType}</span><div><h3 className="font-black">{invite.hospital}</h3><p className="mt-1 flex items-center gap-1 text-xs text-stone-500"><MapPin className="h-3 w-3" /> {invite.township} · <Clock3 className="ml-1 h-3 w-3" /> {invite.time}</p></div></div><UrgencyPill urgency={invite.urgency} /></div>
-                <div className="mt-4 flex items-center justify-between rounded-xl bg-stone-50 px-3 py-2.5 text-xs"><span className="font-semibold text-stone-500">{invite.status}</span>{invite.status === "Awaiting response" && <Link href="/invite/demo-8K2P" className="flex items-center gap-1 font-black text-brand-700">Respond <ChevronRight className="h-3 w-3" /></Link>}</div>
-              </article>
+      <p className="notice notice-info mb-6 text-xs">{t("donor.safety")}</p>
+
+      <form onSubmit={submit} className="max-w-lg space-y-6">
+        {/* Blood Type */}
+        <div className="auth-card">
+          <p className="form-section-title">{t("donor.bloodType")}</p>
+          <div className="grid grid-cols-4 gap-2 sm:grid-cols-8">
+            {bloodTypes.map((type) => (
+              <button
+                key={type}
+                type="button"
+                onClick={() => setBloodType(type)}
+                className={`rounded-xl border py-3 text-sm font-black transition-all ${
+                  bloodType === type
+                    ? "border-brand-600 bg-brand-600 text-white shadow-glow-sm"
+                    : "border-stone-200 bg-white text-stone-700 hover:border-brand-300"
+                }`}
+                id={`blood-type-${type}`}
+              >
+                {type}
+              </button>
             ))}
           </div>
         </div>
-      </div>
 
-      <div className="mt-6 grid gap-4 md:grid-cols-2">
-        <article className="rounded-3xl border border-stone-200 bg-white p-6"><ShieldCheck className="h-6 w-6 text-emerald-600" /><h2 className="mt-4 font-black">Who decides if I can donate?</h2><p className="mt-2 text-sm leading-6 text-stone-500">Only trained hospital staff can assess eligibility, type and screen blood, and advise you.</p></article>
-        <article className="rounded-3xl border border-stone-200 bg-white p-6"><CircleHelp className="h-6 w-6 text-sky-600" /><h2 className="mt-4 font-black">Have a medical question?</h2><p className="mt-2 text-sm leading-6 text-stone-500">Ask the receiving hospital or Myanmar&apos;s National Blood Centre. B+ does not provide medical advice.</p></article>
-      </div>
-      <p className="mt-6 flex items-center justify-center gap-2 text-xs text-stone-400"><CalendarDays className="h-3.5 w-3.5" /> All dates and invitations shown are fictional.</p>
-    </section>
+        {/* Availability */}
+        <div className="auth-card">
+          <p className="form-section-title">{t("donor.availability")}</p>
+          <div className="grid gap-3 sm:grid-cols-3">
+            {AVAILABILITY_OPTIONS.map((opt) => (
+              <button
+                key={opt.value}
+                type="button"
+                onClick={() => setAvailability(opt.value)}
+                className={`flex flex-col items-center gap-2 rounded-2xl border p-4 text-sm font-bold transition-all ${
+                  availability === opt.value ? opt.selected : opt.color
+                }`}
+                id={`availability-${opt.value}`}
+              >
+                <span className="text-2xl">{opt.emoji}</span>
+                <span>{t(opt.labelKey)}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Location */}
+        <div className="auth-card space-y-4">
+          <p className="form-section-title">
+            <MapPin className="inline h-3.5 w-3.5 mr-1" aria-hidden />
+            {t("donor.location")}
+          </p>
+          <label className="label">
+            {t("request.stateRegion")}
+            <input
+              className="field mt-2"
+              name="stateRegion"
+              minLength={2}
+              maxLength={80}
+              placeholder="e.g. Yangon Region"
+              required
+              id="state-region-input"
+            />
+          </label>
+          <label className="label">
+            {t("request.township")}
+            <input
+              className="field mt-2"
+              name="township"
+              minLength={2}
+              maxLength={80}
+              placeholder="e.g. Kamayut"
+              required
+              id="township-input"
+            />
+          </label>
+        </div>
+
+        {/* Last donation (optional) */}
+        <div className="auth-card">
+          <p className="form-section-title">
+            <Calendar className="inline h-3.5 w-3.5 mr-1" aria-hidden />
+            {t("donor.lastDonation")}
+          </p>
+          <input
+            className="field"
+            name="lastDonationDate"
+            type="date"
+            id="last-donation-input"
+          />
+        </div>
+
+        {status && (
+          <p
+            className={`notice ${saved ? "notice-success" : "notice-warning"}`}
+            role="status"
+          >
+            {saved && <Check className="inline h-4 w-4 mr-1 text-emerald-600" aria-hidden />}
+            {status}
+          </p>
+        )}
+
+        <button
+          className="button button-primary w-full py-3"
+          disabled={busy}
+          id="save-donor-btn"
+        >
+          {busy && <LoaderCircle className="h-4 w-4 animate-spin" aria-hidden />}
+          {busy ? "Saving…" : t("common.save")}
+        </button>
+      </form>
+    </div>
   );
 }
 
-export default DonorPage;
+export default function DonorPage() {
+  return <AuthGuard><DonorProfileForm /></AuthGuard>;
+}

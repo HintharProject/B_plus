@@ -1,0 +1,127 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isSelf(uid) {
+      return signedIn() && request.auth.uid == uid;
+    }
+
+    function isAdmin() {
+      return signedIn() && request.auth.token.admin == true;
+    }
+
+    function isOrganizationMember(organizationId) {
+      return signedIn()
+        && organizationId != null
+        && exists(/databases/$(database)/documents/organizationMembers/$(organizationId + "_" + request.auth.uid))
+        && get(/databases/$(database)/documents/organizationMembers/$(organizationId + "_" + request.auth.uid)).data.status == "ACTIVE";
+    }
+
+    function isMatchParticipant(data) {
+      return signedIn() && (
+        data.requesterId == request.auth.uid
+        || data.candidateId == request.auth.uid
+        || isOrganizationMember(data.organizationId)
+      );
+    }
+
+    match /users/{uid} {
+      allow read: if isSelf(uid) || isAdmin();
+      allow write: if false;
+    }
+
+    match /userPrivate/{uid} {
+      allow read: if isSelf(uid) || isAdmin();
+      allow write: if false;
+    }
+
+    match /donorProfiles/{uid} {
+      allow read: if isSelf(uid) || isAdmin();
+      allow write: if false;
+    }
+
+    match /organizations/{organizationId} {
+      allow read: if resource.data.verificationStatus == "VERIFIED"
+        || isOrganizationMember(organizationId)
+        || isAdmin();
+      allow write: if false;
+    }
+
+    match /organizationMembers/{memberId} {
+      allow read: if signedIn() && (
+        resource.data.userId == request.auth.uid
+        || isOrganizationMember(resource.data.organizationId)
+        || isAdmin()
+      );
+      allow write: if false;
+    }
+
+    match /bloodRequests/{requestId} {
+      allow read: if signedIn() && (
+        resource.data.requesterId == request.auth.uid
+        || isOrganizationMember(resource.data.organizationId)
+        || isAdmin()
+      );
+      allow write: if false;
+    }
+
+    match /requestPrivate/{requestId} {
+      allow read, write: if false;
+    }
+
+    match /matches/{matchId} {
+      allow read: if isMatchParticipant(resource.data) || isAdmin();
+      allow write: if false;
+    }
+
+    match /consentEvents/{eventId} {
+      allow read: if signedIn()
+        && exists(/databases/$(database)/documents/matches/$(resource.data.matchId))
+        && isMatchParticipant(get(/databases/$(database)/documents/matches/$(resource.data.matchId)).data);
+      allow write: if false;
+    }
+
+    match /conversations/{conversationId} {
+      allow read: if signedIn() && request.auth.uid in resource.data.participantIds;
+      allow write: if false;
+
+      match /messages/{messageId} {
+        allow read: if signedIn()
+          && request.auth.uid in get(/databases/$(database)/documents/conversations/$(conversationId)).data.participantIds;
+        allow write: if false;
+      }
+    }
+
+    match /notifications/{notificationId} {
+      allow read: if signedIn() && resource.data.userId == request.auth.uid;
+      allow write: if false;
+    }
+
+    match /deviceTokens/{tokenId} {
+      allow read, write: if false;
+    }
+
+    match /reports/{reportId} {
+      allow read: if signedIn() && (resource.data.reporterId == request.auth.uid || isAdmin());
+      allow write: if false;
+    }
+
+    match /blocks/{blockId} {
+      allow read: if signedIn() && resource.data.ownerId == request.auth.uid;
+      allow write: if false;
+    }
+
+    match /auditLogs/{eventId} {
+      allow read: if isAdmin();
+      allow write: if false;
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

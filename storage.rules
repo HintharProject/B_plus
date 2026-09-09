@@ -1,0 +1,11 @@
+rules_version = '2';
+
+service firebase.storage {
+  match /b/{bucket}/o {
+    // V1 does not accept user uploads. Organization verification documents
+    // require a separately reviewed retention and access policy.
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}
