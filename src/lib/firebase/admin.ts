@@ -1,9 +1,9 @@
 import "server-only";
 
-import { applicationDefault, cert, getApps, initializeApp } from "firebase-admin/app";
-import { getAuth } from "firebase-admin/auth";
-import { getFirestore } from "firebase-admin/firestore";
-import { getMessaging } from "firebase-admin/messaging";
+import { applicationDefault, cert, getApps, initializeApp, type App } from "firebase-admin/app";
+import { getAuth, type Auth } from "firebase-admin/auth";
+import { getFirestore, type Firestore } from "firebase-admin/firestore";
+import { getMessaging, type Messaging } from "firebase-admin/messaging";
 
 const projectId = process.env.FIREBASE_ADMIN_PROJECT_ID
   || process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID
@@ -29,18 +29,29 @@ function getCredential() {
   return undefined;
 }
 
-function getAdminApp() {
+function getAdminApp(): App {
   const existing = getApps()[0];
   if (existing) return existing;
   const credential = getCredential();
+  // Route Handlers may be imported during `next build` without runtime secrets.
+  // Defer credentialed use until a request actually touches Admin services.
   return initializeApp({
     projectId,
     ...(credential ? { credential } : {}),
   });
 }
 
-const app = getAdminApp();
+function createLazyService<T extends object>(factory: () => T): T {
+  let instance: T | undefined;
+  return new Proxy({} as T, {
+    get(_target, property, receiver) {
+      instance ??= factory();
+      const value = Reflect.get(instance, property, receiver);
+      return typeof value === "function" ? value.bind(instance) : value;
+    },
+  });
+}
 
-export const adminAuth = getAuth(app);
-export const adminDb = getFirestore(app);
-export const adminMessaging = getMessaging(app);
+export const adminAuth = createLazyService<Auth>(() => getAuth(getAdminApp()));
+export const adminDb = createLazyService<Firestore>(() => getFirestore(getAdminApp()));
+export const adminMessaging = createLazyService<Messaging>(() => getMessaging(getAdminApp()));

@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { Plus, Droplets, Zap, AlertCircle } from "lucide-react";
+import { Plus, Zap, AlertCircle } from "lucide-react";
 import { AuthGuard } from "@/components/auth/auth-guard";
 import { useLocale } from "@/components/providers/locale-provider";
 import { apiRequest } from "@/lib/api";

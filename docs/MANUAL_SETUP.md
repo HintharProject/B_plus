@@ -52,15 +52,17 @@ Use fictional Firebase Auth test accounts and synthetic requests only.
 ## 4. Configure the Vercel free-plan backend
 
 Vercel Route Handlers enforce privileged state changes while Cloud Functions remain undeployed.
+Use the step-by-step checklist in `docs/DEPLOYMENT.md` when you are ready to go live.
 
 1. Create or import the Git repository as a Vercel project.
 2. Add all `NEXT_PUBLIC_FIREBASE_*` values to Development, Preview, and Production as appropriate.
 3. Set `NEXT_PUBLIC_ENABLE_FIREBASE=true`.
 4. Set `NEXT_PUBLIC_USE_FIREBASE_EMULATORS=false` in Preview and Production.
-5. In Google Cloud IAM, create a dedicated service account for the Vercel backend with only the permissions required for Firebase Authentication token verification and Firestore access.
-6. Store `FIREBASE_ADMIN_PROJECT_ID`, `FIREBASE_ADMIN_CLIENT_EMAIL`, and `FIREBASE_ADMIN_PRIVATE_KEY` as sensitive Vercel environment variables.
-7. Never add those values to Git, source code, screenshots, issue trackers, or chat.
-8. Redeploy after environment changes.
+5. Set `NEXT_PUBLIC_APP_URL` to the deployed HTTPS origin (update again after a custom domain).
+6. In Google Cloud IAM, create a dedicated service account for the Vercel backend with only the permissions required for Firebase Authentication token verification and Firestore access.
+7. Store `FIREBASE_ADMIN_PROJECT_ID`, `FIREBASE_ADMIN_CLIENT_EMAIL`, and `FIREBASE_ADMIN_PRIVATE_KEY` as sensitive Vercel environment variables.
+8. Never add those values to Git, source code, screenshots, issue trackers, or chat.
+9. Redeploy after environment changes.
 
 The service-account private key is the main free-plan operational risk. Restrict access to the Vercel project, rotate the key periodically, and revoke it immediately if exposed. A later billed deployment should use Cloud Functions managed credentials and remove this long-lived Vercel key.
 

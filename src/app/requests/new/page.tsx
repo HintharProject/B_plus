@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, Suspense, useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { Check, ChevronLeft, ChevronRight, LoaderCircle, Droplets } from "lucide-react";
 import { AuthGuard } from "@/components/auth/auth-guard";

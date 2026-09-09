@@ -8,12 +8,6 @@ import { useLocale } from "@/components/providers/locale-provider";
 import { PushOptIn } from "@/components/notifications/push-opt-in";
 import { NotificationList } from "@/components/notifications/notification-list";
 
-const AVAILABILITY_COLORS: Record<string, string> = {
-  AVAILABLE_NOW: "status-active",
-  AVAILABLE_TODAY: "status-pending",
-  PAUSED: "status-inactive",
-};
-
 const actions = [
   {
     href: "/requests/new",

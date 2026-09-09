@@ -37,9 +37,25 @@ npm run build
 npm --prefix functions run build
 ```
 
+## Deployment
+
+Free-plan path: **Vercel (Next.js + Route Handlers) + Firebase Spark (Auth, Firestore, Storage rules)**.
+
+1. Complete Firebase and service-account setup in `docs/MANUAL_SETUP.md`.
+2. Follow the full checklist in `docs/DEPLOYMENT.md`.
+3. Set Vercel environment variables from `.env.example` (never commit real secrets).
+4. Deploy Firestore rules/indexes/storage from a trusted machine; do not deploy Cloud Functions on Spark.
+
+```text
+npm run verify
+npx firebase-tools deploy --only firestore:rules,firestore:indexes,storage
+```
+
+Then import the Git repo in Vercel and redeploy after env vars are set.
+
 ## Safety
 
 - Never commit `.env.local`, service-account keys, access tokens, phone numbers, precise coordinates, or chat content.
 - Do not use real patient or donor information in development.
 - Burmese safety, privacy, consent, and medical-boundary text requires qualified human review before production.
-- See `docs/SECURITY.md` and `docs/MANUAL_SETUP.md` before connecting a real Firebase project.
+- See `docs/SECURITY.md`, `docs/MANUAL_SETUP.md`, and `docs/DEPLOYMENT.md` before connecting a real Firebase project.
