@@ -3,7 +3,16 @@
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { ArrowLeft, MapPin, Check, X } from "lucide-react";
+import {
+  ArrowLeft,
+  MapPin,
+  Check,
+  X,
+  Phone,
+  Send,
+  MessageCircle,
+  ShieldCheck,
+} from "lucide-react";
 import { AuthGuard } from "@/components/auth/auth-guard";
 import { useLocale } from "@/components/providers/locale-provider";
 import { apiRequest } from "@/lib/api";
@@ -13,6 +22,8 @@ type MatchDetail = {
   id: string;
   status: string;
   isCandidate: boolean;
+  candidateType?: "INDIVIDUAL" | "ORGANIZATION";
+  distanceKm?: number;
   conversationId?: string;
   request: {
     bloodTypeNeeded: string;
@@ -23,12 +34,19 @@ type MatchDetail = {
   };
 };
 
+type RevealResult = {
+  preciseDestination: { address?: string } | null;
+  contactInfo: { phone?: string | null; telegram?: string | null } | null;
+  conversationId: string | null;
+};
+
 function MatchView() {
   const params = useParams<{ id: string }>();
   const { t } = useLocale();
   const [match, setMatch] = useState<MatchDetail | null>(null);
   const [status, setStatus] = useState("");
   const [destination, setDestination] = useState<string | null>(null);
+  const [contactInfo, setContactInfo] = useState<{ phone?: string | null; telegram?: string | null } | null>(null);
 
   const load = useCallback(async () => {
     try {
@@ -39,7 +57,9 @@ function MatchView() {
     }
   }, [params.id, t]);
 
-  useEffect(() => { void load(); }, [load]);
+  useEffect(() => {
+    void load();
+  }, [load]);
 
   async function respond(response: "ACCEPTED" | "DECLINED") {
     try {
@@ -56,11 +76,15 @@ function MatchView() {
 
   async function reveal() {
     try {
-      const result = await apiRequest<{
-        preciseDestination: { address?: string } | null;
-        conversationId: string | null;
-      }>(`/matches/${params.id}/reveal`, { method: "POST" });
-      setDestination(result.preciseDestination?.address ?? t("match.noPrivateData"));
+      const result = await apiRequest<RevealResult>(`/matches/${params.id}/reveal`, {
+        method: "POST",
+      });
+      if (result.preciseDestination) {
+        setDestination(result.preciseDestination.address ?? t("match.noPrivateData"));
+      }
+      if (result.contactInfo) {
+        setContactInfo(result.contactInfo);
+      }
       if (result.conversationId && match) {
         setMatch({ ...match, conversationId: result.conversationId });
       }
@@ -73,6 +97,7 @@ function MatchView() {
     try {
       await apiRequest(`/matches/${params.id}`, { method: "DELETE" });
       setDestination(null);
+      setContactInfo(null);
       await load();
     } catch {
       setStatus(t("errors.offline"));
@@ -118,7 +143,15 @@ function MatchView() {
                 </h1>
               </div>
             </div>
-            <UrgencyPill urgency={match.request.urgency} />
+            <div className="flex flex-wrap items-center gap-2">
+              {match.distanceKm !== undefined && match.distanceKm !== null && (
+                <span className="status-chip bg-stone-100 text-stone-700 border-stone-200">
+                  <MapPin className="h-3 w-3 text-stone-500" />
+                  {match.distanceKm} {t("match.distanceKm")}
+                </span>
+              )}
+              <UrgencyPill urgency={match.request.urgency} />
+            </div>
           </div>
 
           {/* Location info */}
@@ -127,13 +160,13 @@ function MatchView() {
               <dt className="text-xs font-bold uppercase tracking-widest text-stone-400">
                 {t("request.hospital")}
               </dt>
-              <dd className="mt-1 font-bold">{match.request.hospital}</dd>
+              <dd className="mt-1 font-bold text-ink">{match.request.hospital}</dd>
             </div>
             <div>
               <dt className="text-xs font-bold uppercase tracking-widest text-stone-400">
                 {t("request.township")}
               </dt>
-              <dd className="mt-1 flex items-center gap-1.5 font-bold">
+              <dd className="mt-1 flex items-center gap-1.5 font-bold text-ink">
                 <MapPin className="h-3.5 w-3.5 text-stone-400" aria-hidden />
                 {match.request.coarseLocation.township},{" "}
                 {match.request.coarseLocation.stateRegion}
@@ -151,7 +184,7 @@ function MatchView() {
             </p>
           )}
 
-          {/* Candidate actions — stacked on mobile */}
+          {/* Candidate actions — for pending match */}
           {match.isCandidate && match.status === "PENDING" && (
             <div className="mt-5 grid gap-3 sm:grid-cols-2">
               <button
@@ -175,26 +208,76 @@ function MatchView() {
 
           {/* Accepted state */}
           {match.status === "ACCEPTED" && (
-            <div className="mt-5 space-y-3">
+            <div className="mt-6 space-y-4">
               <button
-                className="button button-primary w-full"
+                className="button button-primary w-full py-3 shadow-glow-sm"
                 onClick={reveal}
                 id="reveal-btn"
               >
-                {t("match.reveal")}
+                <ShieldCheck className="h-4 w-4" />
+                <span>{t("match.reveal")}</span>
               </button>
+
+              {/* Destination revealed */}
               {destination && (
-                <p className="notice notice-success">{destination}</p>
+                <div className="rounded-2xl border border-emerald-200 bg-emerald-50/70 p-4">
+                  <p className="text-xs font-bold uppercase tracking-wider text-emerald-800">
+                    Destination Location
+                  </p>
+                  <p className="mt-1 font-bold text-emerald-950">{destination}</p>
+                </div>
               )}
+
+              {/* Contact info revealed (Phone / Telegram) */}
+              {contactInfo && (
+                <div className="rounded-2xl border border-brand-100 bg-gradient-to-br from-brand-50/60 to-white p-5 space-y-3">
+                  <p className="text-xs font-black uppercase tracking-wider text-brand-700 flex items-center gap-1.5">
+                    <ShieldCheck className="h-4 w-4" />
+                    <span>{t("match.contactDetails")}</span>
+                  </p>
+
+                  <div className="grid gap-2 sm:grid-cols-2">
+                    {contactInfo.phone ? (
+                      <a
+                        href={`tel:${contactInfo.phone}`}
+                        className="button button-primary w-full gap-2 text-sm"
+                        id="call-donor-btn"
+                      >
+                        <Phone className="h-4 w-4" />
+                        <span>{t("match.directCall")}: {contactInfo.phone}</span>
+                      </a>
+                    ) : (
+                      <p className="text-xs text-stone-400 self-center">No phone number provided</p>
+                    )}
+
+                    {contactInfo.telegram ? (
+                      <a
+                        href={`https://t.me/${contactInfo.telegram}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="button bg-[#229ED9] text-white hover:bg-[#1e8ec3] w-full gap-2 text-sm shadow-sm"
+                        id="telegram-donor-btn"
+                      >
+                        <Send className="h-4 w-4" />
+                        <span>{t("match.openTelegram")}: @{contactInfo.telegram}</span>
+                      </a>
+                    ) : null}
+                  </div>
+                </div>
+              )}
+
+              {/* In-app chat */}
               {match.conversationId && (
                 <Link
-                  className="button button-secondary w-full"
+                  className="button button-secondary w-full gap-2 py-3"
                   href={`/chat/${match.conversationId}`}
                   id="open-chat-btn"
                 >
-                  {t("chat.title")}
+                  <MessageCircle className="h-4 w-4 text-brand-600" />
+                  <span>{t("chat.title")}</span>
                 </Link>
               )}
+
               <button
                 className="w-full pt-1 text-center text-sm font-bold text-stone-400 underline-offset-2 transition hover:text-brand-700 hover:underline"
                 onClick={revoke}
@@ -210,7 +293,9 @@ function MatchView() {
           )}
 
           {status && (
-            <p className="notice notice-info mt-4" role="status">{status}</p>
+            <p className="notice notice-info mt-4" role="status">
+              {status}
+            </p>
           )}
         </div>
       </div>
@@ -219,5 +304,9 @@ function MatchView() {
 }
 
 export default function MatchPage() {
-  return <AuthGuard><MatchView /></AuthGuard>;
+  return (
+    <AuthGuard>
+      <MatchView />
+    </AuthGuard>
+  );
 }

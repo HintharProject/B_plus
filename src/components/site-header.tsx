@@ -20,7 +20,7 @@ export function SiteHeader() {
     { href: "/organizations", label: t("nav.organizations") },
     { href: "/requests", label: t("nav.requests") },
     { href: "/matches", label: t("nav.matches") },
-    { href: "/donor", label: t("nav.donor") },
+    { href: "/profile", label: t("nav.profile") },
   ];
 
   // Detect scroll to switch header style

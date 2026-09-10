@@ -1,8 +1,9 @@
 "use client";
 
 import { Suspense, useEffect, useState } from "react";
+import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { Check, ChevronLeft, ChevronRight, LoaderCircle, Droplets } from "lucide-react";
+import { Check, ChevronLeft, ChevronRight, LoaderCircle, Droplets, Navigation } from "lucide-react";
 import { AuthGuard } from "@/components/auth/auth-guard";
 import { LoadingFallback } from "@/components/loading-fallback";
 import { useLocale } from "@/components/providers/locale-provider";
@@ -86,6 +87,7 @@ function NewRequestForm() {
   const [status, setStatus] = useState("");
   const [busy, setBusy] = useState(false);
   const [done, setDone] = useState(false);
+  const [gpsCoords, setGpsCoords] = useState<{ latitude: number; longitude: number } | null>(null);
 
   useEffect(() => {
     const saved = window.localStorage.getItem("bplus-request-draft");
@@ -116,6 +118,7 @@ function NewRequestForm() {
           urgency: draft.urgency,
           hospital: draft.hospital,
           coarseLocation: { stateRegion: draft.stateRegion, township: draft.township },
+          coordinates: gpsCoords,
           unitsRequired: Number(draft.unitsRequired),
           neededBy: new Date(draft.neededBy).toISOString(),
           expiresAt: new Date(draft.expiresAt).toISOString(),
@@ -148,12 +151,21 @@ function NewRequestForm() {
         </span>
         <h1 className="mt-5 text-2xl font-black">{t("request.success").replace(/\..*/, "")}</h1>
         <p className="mt-2 text-sm text-stone-500">{status}</p>
-        <button
-          className="button button-primary mt-8"
-          onClick={() => { setStep(1); setDone(false); setStatus(""); }}
-        >
-          Create another request
-        </button>
+        <div className="mt-8 flex flex-col sm:flex-row gap-3">
+          <Link
+            className="button button-primary"
+            href="/requests"
+            id="view-requests-btn"
+          >
+            View Requests & Search Donors →
+          </Link>
+          <button
+            className="button button-secondary"
+            onClick={() => { setStep(1); setDone(false); setStatus(""); }}
+          >
+            Create another request
+          </button>
+        </div>
       </div>
     );
   }
@@ -170,9 +182,6 @@ function NewRequestForm() {
 
       {/* Privacy notice */}
       <p className="notice notice-warning mb-6 text-xs">{t("request.minimalNotice")}</p>
-      {!organizationId && (
-        <p className="notice notice-info mb-6 text-xs">{t("request.pending")}</p>
-      )}
 
       {/* ── Step 1: Blood Info ─── */}
       {step === 1 && (
@@ -269,6 +278,34 @@ function NewRequestForm() {
       {/* ── Step 2: Location ─── */}
       {step === 2 && (
         <div className="auth-card space-y-5">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold uppercase tracking-wider text-stone-400">Facility Location</span>
+            <button
+              type="button"
+              onClick={() => {
+                if (!navigator.geolocation) {
+                  alert("Geolocation is not supported by your browser.");
+                  return;
+                }
+                navigator.geolocation.getCurrentPosition(
+                  (pos) => {
+                    setGpsCoords({
+                      latitude: Math.round(pos.coords.latitude * 10000) / 10000,
+                      longitude: Math.round(pos.coords.longitude * 10000) / 10000,
+                    });
+                  },
+                  () => alert("Unable to detect current location."),
+                  { timeout: 10000 },
+                );
+              }}
+              className="button button-secondary py-1 px-3 text-xs gap-1.5"
+              id="detect-req-gps-btn"
+            >
+              <Navigation className="h-3 w-3" />
+              <span>{gpsCoords ? t("profile.gpsLocated") : t("profile.useGps")}</span>
+            </button>
+          </div>
+
           <label className="label">
             {t("request.stateRegion")}
             <input

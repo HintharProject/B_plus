@@ -2,6 +2,7 @@ import { FieldValue, Timestamp } from "firebase-admin/firestore";
 import { NextRequest, NextResponse } from "next/server";
 import { adminDb } from "@/lib/firebase/admin";
 import { bloodRequestInputSchema } from "@/lib/domain";
+import { resolveLocationCoordinates } from "@/lib/geo";
 import { writeAudit } from "@/lib/server/audit";
 import { jsonError, requireOrganizationRole, requireUser } from "@/lib/server/http";
 
@@ -32,20 +33,24 @@ export async function POST(request: NextRequest) {
   try {
     const auth = await requireUser(request);
     const input = bloodRequestInputSchema.parse(await request.json());
-    let organizationVerified = false;
     if (input.organizationId) {
       await requireOrganizationRole(input.organizationId, auth.uid, ["OWNER", "COORDINATOR"]);
-      const organization = await adminDb.doc(`organizations/${input.organizationId}`).get();
-      organizationVerified = organization.exists
-        && organization.get("verificationStatus") === "VERIFIED";
     }
 
     const requestRef = adminDb.collection("bloodRequests").doc();
-    const status = input.organizationId && organizationVerified ? "ACTIVE" : "PENDING_VERIFICATION";
+    // Individual and organization requests are ACTIVE immediately for real-time donor matching
+    const status = "ACTIVE";
+    const coordinates = resolveLocationCoordinates(
+      input.coarseLocation.township,
+      input.coarseLocation.stateRegion,
+      input.coordinates,
+    );
+
     const batch = adminDb.batch();
     const { preciseDestination, ...safeInput } = input;
     batch.set(requestRef, {
       ...safeInput,
+      coordinates,
       requesterId: auth.uid,
       organizationId: input.organizationId ?? null,
       neededBy: Timestamp.fromDate(new Date(input.neededBy)),

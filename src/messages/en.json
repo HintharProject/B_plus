@@ -13,6 +13,9 @@
     "language": "Language",
     "roles": "Roles",
     "userId": "User ID",
+    "copyId": "Copy ID",
+    "copied": "Copied!",
+    "remove": "Remove",
     "privacyNotice": "B+ coordinates introductions. A medical facility must confirm donation eligibility.",
     "translationReview": "Safety and privacy translations require human review before production.",
     "skipToContent": "Skip to main content"
@@ -35,6 +38,9 @@
     "description": "B+ helps people and verified organizations coordinate blood donation requests. Matching is not consent: contact and precise destination details stay protected until a donor explicitly accepts.",
     "primaryAction": "Get started",
     "secondaryAction": "How it works",
+    "requestBlood": "Request blood",
+    "registerDonor": "Register as donor",
+    "demoPreview": "Demo Preview",
     "limited": "Limited information",
     "limitedText": "Potential donors see only blood type, urgency, facility area, and approximate distance.",
     "consent": "Explicit acceptance",
@@ -81,7 +87,13 @@
     "newRequest": "Request blood",
     "donorProfile": "Donor profile",
     "yourMatches": "Your matches",
-    "organization": "Organization workspace"
+    "organization": "Organization workspace",
+    "urgentBadge": "Immediate Action",
+    "newRequestDesc": "Submit an urgent or scheduled blood need. We coordinate matching while protecting patient privacy.",
+    "donorProfileDesc": "Manage your blood type and donation availability.",
+    "yourMatchesDesc": "Review and respond to active match invitations.",
+    "organizationDesc": "Manage verified hospital workspace and verify requests.",
+    "createRequestCta": "Create Blood Request"
   },
   "request": {
     "newTitle": "Create a blood request",
@@ -115,6 +127,26 @@
     "safety": "B+ does not determine whether you are medically eligible. Confirm with the donation facility.",
     "saved": "Donor profile saved."
   },
+  "profile": {
+    "title": "My Profile",
+    "subtitle": "Manage your personal contact details, donation availability, and organizations",
+    "personalInfo": "Account & Contact Information",
+    "displayName": "Display name",
+    "email": "Email address",
+    "phone": "Contact Phone Number",
+    "phonePlaceholder": "e.g. 09123456789",
+    "telegram": "Telegram Handle",
+    "telegramPlaceholder": "e.g. username (without @)",
+    "contactNotice": "Your phone number and Telegram handle remain strictly confidential until you explicitly accept a blood match invitation.",
+    "donorSection": "Blood Donor Availability",
+    "myOrganizations": "My Organizations",
+    "noOrganizations": "You are not a member of any organization yet.",
+    "saved": "Profile updated successfully.",
+    "useGps": "Detect Current GPS",
+    "gpsLocated": "Location detected",
+    "userId": "Your User ID",
+    "userIdHint": "Share this User ID with organization owners so they can invite you to their team as a Coordinator, Viewer, or Owner."
+  },
   "match": {
     "title": "Blood request",
     "limitedNotice": "Your contact information and precise location remain private unless you accept.",
@@ -125,7 +157,12 @@
     "expired": "This match has expired.",
     "reveal": "View permitted coordination details",
     "revoke": "Cancel match and revoke access",
-    "noPrivateData": "No precise destination was supplied. Use the private chat to coordinate."
+    "noPrivateData": "No precise destination was supplied. Use the private chat to coordinate.",
+    "distance": "Distance",
+    "distanceKm": "km away",
+    "directCall": "Call directly",
+    "openTelegram": "Message on Telegram",
+    "contactDetails": "Donor Contact Details"
   },
   "chat": {
     "title": "Match conversation",
@@ -161,7 +198,19 @@
     "requestId": "Request ID",
     "membershipPending": "Organization membership invitation",
     "acceptMembership": "Accept membership",
-    "declineMembership": "Decline membership"
+    "declineMembership": "Decline membership",
+    "edit": "Edit organization",
+    "delete": "Delete organization",
+    "deleteConfirm": "Are you sure you want to delete this organization? This cannot be undone.",
+    "updated": "Organization updated successfully.",
+    "deleted": "Organization deleted successfully.",
+    "userIdOrEmail": "User ID or Email address",
+    "inviteMember": "Invite Team Member",
+    "membersList": "Current Team Members",
+    "noMembers": "No other team members yet.",
+    "invitedSuccess": "Team member invited successfully.",
+    "inviteHint": "Enter the user's User ID (which they can copy from their Profile page) or their registered email address.",
+    "removeMemberConfirm": "Are you sure you want to remove this member from the organization?"
   },
   "admin": {
     "title": "Administration",

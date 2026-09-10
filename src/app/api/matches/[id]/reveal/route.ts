@@ -21,16 +21,34 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
       throw new HttpError(403, "NOT_PARTICIPANT", "You are not a participant.");
     }
 
-    const privateRequest = await adminDb.doc(`requestPrivate/${match.get("requestId")}`).get();
-    const preciseDestination = match.get("candidateId") === auth.uid
-      ? privateRequest.get("preciseDestination") ?? null
-      : null;
-    await writeAudit(auth.uid, "LOCATION_REVEALED", "MATCH", id, {
-      scope: preciseDestination ? "PRECISE_DESTINATION" : "NO_PRECISE_DATA",
+    const isRequester = auth.uid === match.get("requesterId");
+    const candidateId = match.get("candidateId");
+
+    let preciseDestination: unknown = null;
+    let contactInfo: { phone?: string | null; telegram?: string | null } | null = null;
+
+    if (!isRequester) {
+      // Donor sees destination
+      const privateRequest = await adminDb.doc(`requestPrivate/${match.get("requestId")}`).get();
+      preciseDestination = privateRequest.get("preciseDestination") ?? null;
+    } else {
+      // Requester sees donor's direct contact details (phone, telegram)
+      const [donorDoc, userDoc] = await Promise.all([
+        adminDb.doc(`donorProfiles/${candidateId}`).get(),
+        adminDb.doc(`users/${candidateId}`).get(),
+      ]);
+      const phone = donorDoc.get("phone") ?? userDoc.get("phone") ?? null;
+      const telegram = donorDoc.get("telegram") ?? userDoc.get("telegram") ?? null;
+      contactInfo = { phone, telegram };
+    }
+
+    await writeAudit(auth.uid, "MATCH_DETAILS_REVEALED", "MATCH", id, {
+      scope: isRequester ? "CONTACT_INFO_REVEALED" : "PRECISE_DESTINATION_REVEALED",
     });
 
     return NextResponse.json({
       preciseDestination,
+      contactInfo,
       conversationId: match.get("conversationId") ?? null,
       expiresAt: match.get("expiresAt").toDate().toISOString(),
     });

@@ -12,6 +12,7 @@ import type { Urgency } from "@/lib/domain";
 type MatchItem = {
   id: string;
   status: string;
+  distanceKm?: number;
   request?: {
     bloodTypeNeeded: string;
     urgency: Urgency;
@@ -94,6 +95,11 @@ function MatchesList() {
                       <span className="flex items-center gap-1 text-xs text-stone-400">
                         <MapPin className="h-3 w-3" aria-hidden />
                         {match.request.coarseLocation.township}
+                      </span>
+                    )}
+                    {match.distanceKm !== undefined && match.distanceKm !== null && (
+                      <span className="flex items-center gap-1 rounded-full border border-stone-200 bg-stone-50 px-2 py-0.5 text-[10px] font-semibold text-stone-600">
+                        {match.distanceKm} km
                       </span>
                     )}
                     <span className={`status-chip ${statusCfg.chip}`}>
